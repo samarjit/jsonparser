@@ -59,3 +59,25 @@ body {
   padding-right: 6px;
   padding-left: 6px;
 }
+
+.tab-nav {
+    background-color: transparent;
+    border: none;
+    outline: transparent;
+    border-bottom: 2px solid white;
+    width: 70px;
+    font-weight: 600;
+}
+.tab-nav:focus {
+  border-bottom: 2px dashed lightblue;
+}
+.tab-nav.selected-tab {
+  background-color: transparent;
+  border-bottom: 2px solid lightblue;
+}
+.tab-view {
+  display: none;
+}
+.tab-view.selected-tab {
+  display: block;
+}

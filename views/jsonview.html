@@ -11,7 +11,7 @@
 	<style type="text/css">
 	 body{
             font-family: arial;
-            min-height: 2000px;
+            /*min-height: 2000px;*/
 	  		padding-top: 70px;
          }  
 	</style>
@@ -115,7 +115,7 @@ var onmouseMove = (function() {
 			statusElement.innerText = str;
 			return;
 		}
-		onmouseOut();
+		// onmouseOut();
 	};
 })();
 
@@ -127,6 +127,25 @@ function onmouseClick() {
 	selectedLI = getParentLI(event.target);
 	if (selectedLI) {
 		selectedLI.firstChild.classList.add("selected");
+	}
+
+	///show json path
+	if (selectedLI) {
+		var str = "";
+		element = selectedLI;
+		do {
+			if (element.parentNode.classList.contains("array")) {
+				var index = [].indexOf.call(element.parentNode.children, element);
+				str = "[" + index + "]" + str;
+			}
+			if (element.parentNode.classList.contains("obj")) {
+				str = "." + element.firstChild.firstChild.innerText + str;
+			}
+			element = element.parentNode.parentNode.parentNode;
+		} while (element.tagName == "LI");
+		if (str.charAt(0) == '.')
+			str = str.substring(1);
+		document.getElementById('jsonpathviewer').innerText = str;
 	}
 }
 
@@ -259,6 +278,7 @@ try {
 }
 jsonObject = x;
 console.log(x);
+document.getElementById("myjson").value = JSON.stringify(x, null, 3);
 document.getElementById("outputtag").innerHTML = valueToHTML(x);
 
 
@@ -304,17 +324,41 @@ collapsers = document.querySelectorAll("#json .collapsible .collapsible");
 						path : statusElement.innerText
 					});
 				}, false);
-				
-//collapse all 				
-			var divs = document.getElementsByTagName("div");
-			for(i in divs){
-				if(i >0 && divs[i].className != null && divs[i].className.indexOf("collapser") > -1){
-					divs[i].click();
-				}
-			}
-			document.getElementById("outputtag").classList.remove('collapsed');
+
+				collapseAll();
+				 
 }
 
+function collapseAll() {
+	//collapse all 				
+	var divs = document.getElementsByTagName("div");
+	for(i in divs){
+		if(i >0 && divs[i].className != null && divs[i].className.indexOf("collapser") > -1){
+			divs[i].click();
+		}
+	}
+	document.getElementById("outputtag").classList.remove('collapsed');
+}
+function collapseStep() {
+	//collapse all
+	function collapseFirstChild(parent) { 
+		$('>ul.collapsible>li>div', parent).each((i,v)=>{
+			if(v.classList.contains('collapsed')) {
+				$(v).find('>.collapser').click();
+				return;
+			} else {
+				collapseFirstChild(v);
+			}
+		});
+	}
+	collapseFirstChild('#outputtag');
+}
+
+function formatOnce() {
+	if($.isEmptyObject(jsonObject)) {
+		format();
+	}
+}
 
 	</script>
 </head>
@@ -338,25 +382,68 @@ collapsers = document.querySelectorAll("#json .collapsible .collapsible");
 		</div>
 	</div>
 </div>
-<div style="padding:15px">
-<h1>Javascript Object/Json prettyprint v1.1</h1>
-<h3>Pretty print JSON, Convert normal java script object to JSON and show as json tree with collapsible branches</h3>
-<div>You can enter JSON or normal javascript object in the text area below. The tool will pretty print as json tree will collapsible branches. When the branches are collapsed then the tree branches will show abbreviated json structure of the child node, which is very useful to verify deep json structures.</div>
+<div style="padding:0 15px">
+<h1 style="display:none">Javascript Object/Json prettyprint v1.1</h1>
+<h3 style="display:none">Pretty print JSON, Convert normal java script object to JSON and show as json tree with collapsible branches</h3>
+<div style="display:none">You can enter JSON or normal javascript object in the text area below. The tool will pretty print as json tree will collapsible branches. When the branches are collapsed then the tree branches will show abbreviated json structure of the child node, which is very useful to verify deep json structures.</div>
 
 
 <br>
-	Enter json below to format: <br>
-	<table border="0">
-          <tbody><tr>
-            <td> <textarea id="myjson" rows="10" cols="150">{data: {name: "samarjit", dob: "D-M-Y", email: "test@email.com", address: [{type: "office address", street: "One raffles Quay"},{type:"home address", street:"Farrer Road"}]}}</textarea></td><td><input type="button" onclick="format()" value="format json">	</td>
-           </tr><tr>
-        </tr></tbody>
-    </table>
+	
+	<section>
+		<nav id="tab">
+			<button data-tab-ref="textdata" class="tab-nav selected-tab">Text</button>
+			<button data-tab-ref="viewer" class="tab-nav" onclick="formatOnce()">Viewer</button>
+		</nav>
+		<br/>
+		<aside data-tab-id="textdata" class="tab-view selected-tab">
+			Enter json below to format: <button onclick="format()" >Format json</button> <br/>
+			
+			<textarea id="myjson" rows="10"  style="width:calc(100vw - 30px)">
+{
+   "data1": {
+      "name": "samarjit",
+      "dob": "D-M-Y",
+      "email": "test@email.com",
+      "address": [
+         {
+            "type": "office address",
+            "street": "One raffles Quay"
+         },
+         {
+            "type": "home address",
+            "street": "Farrer Road"
+         }
+      ]
+   },
+   "data2": {
+      "name": "samarjit",
+      "dob": "D-M-Y",
+      "email": "test@email.com",
+      "address": [
+         {
+            "type": "office address",
+            "street": "One raffles Quay"
+         },
+         {
+            "type": "home address",
+            "street": "Farrer Road"
+         }
+      ]
+   }
+}
+			</textarea></td>
+
+	    </aside>
        
-	<pre id="outputtag" style='background-color:white;border:none'>	
-	</pre>
+		<aside data-tab-id="viewer" class="tab-view">
+			<button onclick="collapseAll()" >Collapse/Expand</button>
+			<button onclick="collapseStep()" >Expand Step by Step</button>
+			Json Path: <span id="jsonpathviewer" ></span><br/>
+			<pre id="outputtag" style='background-color:white;border:none'>	</pre>
+		</aside>
 	
-	
+	</section>
  
 	<ul id="contextMenu" class="dropdown-menu"  >
 	    <li><a onclick="copyJsonPath()">Copy json path</a></li>
@@ -365,8 +452,8 @@ collapsers = document.querySelectorAll("#json .collapsible .collapsible");
 	</ul>
 		 
 	
-	<p class="change-log">
-	</p><hr>
+	<div class="change-log" style="display:none">
+	<hr>
 	<h4>Change Log:</h4>
 	<ul>
 	   <li>1.2 
@@ -386,7 +473,7 @@ collapsers = document.querySelectorAll("#json .collapsible .collapsible");
 	      </ul>
 	   </li> 
 	</ul>
-	<p></p>
+	</div>
 </div>
 
 <script>
@@ -458,6 +545,17 @@ function copyFormattedJsonValue(){
 $("body").on("click", function(){
 	 $contextMenu.hide();
 });
+
+$("#tab").on('click', '.tab-nav', function(e) {
+	$('.tab-nav').removeClass('selected-tab');
+	$(this).addClass('selected-tab');
+	var tabId = $(this).data('tab-ref');
+	$('.tab-view').removeClass('selected-tab');
+	$('[data-tab-id='+tabId+']').addClass('selected-tab');
+});
+
+//Height Adjustment of textarea
+$('#myjson').css('height', 'calc(100vh - ' + (parseInt($('#myjson').offset().top) + 15) + 'px)');
 </script>
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
